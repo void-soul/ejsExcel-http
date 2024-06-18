@@ -8,6 +8,7 @@ const Hzip = require("./lib/hzip");
 const xml2json = require("./lib/xml2json");
 const xmldom = require("./lib/xmldom");
 const ejs4xlx = require("./ejs4xlx");
+const {downloadImageToBuffer} = require('./lib/http');
 
 const isType = function (type) {
   return function (obj) {
@@ -442,11 +443,20 @@ async function renderExcel(exlBuf, _data_, opt) {
       return "";
     }
     if (isString(imgPh)) {
-      try {
-        imgBuf = await readFileAsync(imgPh);
-      } catch (error) {
-        err = error;
-        return "";
+      if(imgPh.startsWith('http://') || imgPh.startsWith('https://')){
+        try {
+          imgBuf = await downloadImageToBuffer(imgPh);
+        } catch (error) {
+          err = error;
+          return "";
+        }
+      } else {
+        try {
+          imgBuf = await readFileAsync(imgPh);
+        } catch (error) {
+          err = error;
+          return "";
+        }
       }
       imgBaseName = path.basename(imgPh);
     } else if (Buffer.isBuffer(imgPh)) {
